@@ -1,5 +1,5 @@
 torch
-diffusers
+diffusers=0.32.2
 transformers
 accelerate
 fastapi
