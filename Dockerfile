@@ -14,6 +14,9 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# This is only working from a separate install right now
+RUN pip install git+https://github.com/huggingface/diffusers
+
 # Ensure dependencies are installed before model download
 RUN python3 -c "import torch, diffusers, transformers"
 
