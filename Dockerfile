@@ -1,5 +1,5 @@
-# Use an official PyTorch base image with CUDA support (adjust tag for your GPU)
-FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04
+# Use an official PyTorch image with CUDA (ensures compatibility)
+FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime  # Adjust version if needed
 
 # Set working directory
 WORKDIR /app
@@ -8,14 +8,19 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     python3-pip \
     git \
-    && rm -rf /var/lib/apt/lists/*
+    git-lfs && \  # Ensure git-lfs is installed
+    rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Copy and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Ensure dependencies are installed before model download
+RUN python3 -c "import torch, diffusers, transformers"
+
 # Pre-download the WAN 2.1 model from Hugging Face
-RUN python3 -c "from diffusers import WanPipeline; WanPipeline.from_pretrained('Wan-AI/Wan2.1-T2V-1.3B-Diffusers', torch_dtype='auto')"
+RUN python3 -c "from diffusers import WanPipeline; \
+    WanPipeline.from_pretrained('Wan-AI/Wan2.1-T2V-1.3B-Diffusers', torch_dtype='auto')"
 
 # Copy the API code
 COPY . .
