@@ -7,7 +7,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     python3-pip \
     git \
-    git-lfs && \  # Ensure git-lfs is installed
+    git-lfs && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy and install Python dependencies
