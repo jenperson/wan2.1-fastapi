@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 from huggingface_hub import snapshot_download
 
-model_path = "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers"
+model_path = "app/model/Wan-AI/Wan2.1-I2V-14B-480P-Diffusers"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 IMAGE_DIR = os.path.join(BASE_DIR, "generated_images")
