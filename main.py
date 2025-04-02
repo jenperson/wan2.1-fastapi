@@ -9,6 +9,9 @@ import os
 from PIL import Image
 from fastapi.staticfiles import StaticFiles
 import os
+from huggingface_hub import snapshot_download
+
+model_path = "model/Wan-AI/Wan2.1-I2V-14B-480P-Diffusers"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 IMAGE_DIR = os.path.join(BASE_DIR, "generated_images")
@@ -22,14 +25,12 @@ app = FastAPI()
 app.mount("/videos", StaticFiles(directory=VIDEO_DIR), name="videos")
 app.mount("/images", StaticFiles(directory=IMAGE_DIR), name="images")
 
-# Load the model once at startup
-model_id = "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers"
 image_encoder = CLIPVisionModel.from_pretrained(
-    model_id, subfolder="image_encoder", torch_dtype=torch.float32
+    model_path, subfolder="image_encoder", torch_dtype=torch.float32
 )
-vae = AutoencoderKLWan.from_pretrained(model_id, subfolder="vae", torch_dtype=torch.float32)
+vae = AutoencoderKLWan.from_pretrained(model_path, subfolder="vae", torch_dtype=torch.float32)
 pipe = WanImageToVideoPipeline.from_pretrained(
-    model_id, vae=vae, image_encoder=image_encoder, torch_dtype=torch.bfloat16
+    model_path, vae=vae, image_encoder=image_encoder, torch_dtype=torch.bfloat16
 )
 pipe.enable_model_cpu_offload()
 print("Model loaded!")

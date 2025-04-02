@@ -1,8 +1,9 @@
-torch
-transformers
 accelerate
 fastapi
-uvicorn
+huggingface_hub
 ftfy
 imageio-ffmpeg
 imageio
+torch
+transformers
+uvicorn
