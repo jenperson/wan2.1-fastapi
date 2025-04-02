@@ -17,8 +17,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # This is only working from a separate install right now
 RUN pip install git+https://github.com/huggingface/diffusers
 
-
-
 # Create model directory
 RUN mkdir -p /app/model
 
@@ -57,12 +55,6 @@ RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download
 RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='Wan-AI/Wan2.1-I2V-14B-480P-Diffusers', local_dir='/app/model', allow_patterns=['transformer/diffusion_pytorch_model.safetensors.index.json'])"
 RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='Wan-AI/Wan2.1-I2V-14B-480P-Diffusers', local_dir='/app/model', allow_patterns=['vae/config.json'])"
 RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='Wan-AI/Wan2.1-I2V-14B-480P-Diffusers', local_dir='/app/model', allow_patterns=['vae/diffusion_pytorch_model.safetensors'])"
-
-
-# Pre-download the WAN 2.1 model from Hugging Face
-
-# RUN python3 -c "from diffusers import WanPipeline; \
-#     WanPipeline.from_pretrained('Wan-AI/Wan2.1-I2V-14B-480P-Diffusers', torch_dtype='auto')"
 
 # Copy the API code
 COPY . .
