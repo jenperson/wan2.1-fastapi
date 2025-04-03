@@ -4,6 +4,7 @@ huggingface_hub
 ftfy
 imageio-ffmpeg
 imageio
+pydantic
 torch
 transformers
 uvicorn
