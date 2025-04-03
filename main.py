@@ -9,13 +9,13 @@ import os
 from PIL import Image
 from fastapi.staticfiles import StaticFiles
 import os
-from huggingface_hub import snapshot_download
 
-model_path = "app/model/Wan-AI/Wan2.1-I2V-14B-480P-Diffusers"
+model_path = "/app/model/Wan-AI/Wan2.1-I2V-14B-480P-Diffusers"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 IMAGE_DIR = os.path.join(BASE_DIR, "generated_images")
 VIDEO_DIR = os.path.join(BASE_DIR, "generated_videos")
+MODEL_DIR = os.path.join(BASE_DIR, "app/model/Wan-AI/Wan2.1-I2V-14B-480P-Diffusers")
 
 os.makedirs(IMAGE_DIR, exist_ok=True)
 os.makedirs(VIDEO_DIR, exist_ok=True)
