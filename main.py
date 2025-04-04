@@ -25,7 +25,13 @@ app = FastAPI()
 app.mount("/videos", StaticFiles(directory=VIDEO_DIR), name="videos")
 app.mount("/images", StaticFiles(directory=IMAGE_DIR), name="images")
 
-
+image_encoder = CLIPVisionModel.from_pretrained(
+    model_path, subfolder="image_encoder", cache_dir="/app/model_cache", torch_dtype=torch.float32
+)
+vae = AutoencoderKLWan.from_pretrained(model_path, subfolder="vae", cache_dir="/app/model_cache", torch_dtype=torch.float32)
+pipe = WanImageToVideoPipeline.from_pretrained(
+    model_path, vae=vae, cache_dir="/app/model_cache", image_encoder=image_encoder, torch_dtype=torch.bfloat16
+)
 pipe.enable_model_cpu_offload()
 print("Model loaded!")
 

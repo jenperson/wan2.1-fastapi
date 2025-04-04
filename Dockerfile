@@ -23,7 +23,7 @@ RUN mkdir -p /app/model
 # Download full model and cache
 RUN python3 -c "\
 from diffusers import WanImageToVideoPipeline; \
-WanImageToVideoPipeline.from_pretrained('Wan-AI/Wan2.1-I2V-14B-480P-Diffusers')"
+WanImageToVideoPipeline.from_pretrained('Wan-AI/Wan2.1-I2V-14B-480P-Diffusers', cache_dir='/app/model_cache')"
 
 # Copy the API code
 COPY . .
