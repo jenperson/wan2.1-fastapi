@@ -13,17 +13,14 @@ import os
 
 model_path = "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers"
 
+# Add directory to store generated videos
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-IMAGE_DIR = os.path.join(BASE_DIR, "generated_images")
 VIDEO_DIR = os.path.join(BASE_DIR, "generated_videos")
-
-os.makedirs(IMAGE_DIR, exist_ok=True)
 os.makedirs(VIDEO_DIR, exist_ok=True)
 
 app = FastAPI()
 
 app.mount("/videos", StaticFiles(directory=VIDEO_DIR), name="videos")
-app.mount("/images", StaticFiles(directory=IMAGE_DIR), name="images")
 
 image_encoder = CLIPVisionModel.from_pretrained(
     model_path, subfolder="image_encoder", torch_dtype=torch.float32
@@ -35,7 +32,7 @@ pipe = WanImageToVideoPipeline.from_pretrained(
 pipe.enable_model_cpu_offload()
 print("Model loaded!")
 
-# Define a request schema
+# Define the request schema
 class GenerationRequest(BaseModel):
     prompt: str
     negative_prompt: str = ""
@@ -49,6 +46,7 @@ def generate_video(request: GenerationRequest):
         request.image_url
     )
 
+    # See Hugging Face documentation for details: https://huggingface.co/docs/diffusers/main/en/api/pipelines/wan#image-to-video-generation
     max_area = 480 * 832
     aspect_ratio = image.height / image.width
     mod_value = pipe.vae_scale_factor_spatial * pipe.transformer.config.patch_size[1]

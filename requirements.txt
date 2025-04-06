@@ -8,3 +8,4 @@ pydantic
 torch
 transformers
 uvicorn
+huggingface_hub[hf_transfer]
