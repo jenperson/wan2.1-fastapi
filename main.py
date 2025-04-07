@@ -22,14 +22,18 @@ app = FastAPI()
 
 app.mount("/videos", StaticFiles(directory=VIDEO_DIR), name="videos")
 
+# Load the model from the container
 image_encoder = CLIPVisionModel.from_pretrained(
     model_path, subfolder="image_encoder", torch_dtype=torch.float32
 )
 vae = AutoencoderKLWan.from_pretrained(model_path, subfolder="vae", torch_dtype=torch.float32)
 pipe = WanImageToVideoPipeline.from_pretrained(
-    model_path, vae=vae, image_encoder=image_encoder, torch_dtype=torch.bfloat16
+    model_path,
+    vae=vae,
+    image_encoder=image_encoder,
+    torch_dtype=torch.bfloat16,
 )
-pipe.enable_model_cpu_offload()
+pipe.to("cuda")
 print("Model loaded!")
 
 # Define the request schema
@@ -41,6 +45,7 @@ class GenerationRequest(BaseModel):
 
 @app.post("/generate-video")
 def generate_video(request: GenerationRequest):
+    print(f"request created: {request.prompt}, {request.negative_prompt}, {request.num_frames}, {request.image_url}")
     """Generate a video from a text prompt."""
     image = load_image(
         request.image_url
@@ -62,6 +67,7 @@ def generate_video(request: GenerationRequest):
             num_frames=request.num_frames,
             guidance_scale=5.0,
         ).frames[0]
+        print("frames successfully generated")
 
         video_filename = f"{VIDEO_DIR}/{uuid.uuid4()}.mp4"
         export_to_video(frames, video_filename, fps=16)
@@ -69,6 +75,7 @@ def generate_video(request: GenerationRequest):
         return {"video_path": video_filename}
 
     except Exception as e:
+        print(str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
