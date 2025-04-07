@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException,  BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import torch
 import numpy as np
@@ -21,6 +22,13 @@ os.makedirs(VIDEO_DIR, exist_ok=True)
 os.makedirs(STATUS_DIR, exist_ok=True)
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Or restrict to ["http://localhost:5173"] for tighter security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.mount("/videos", StaticFiles(directory=VIDEO_DIR), name="videos")
 
