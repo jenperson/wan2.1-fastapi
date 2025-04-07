@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException,  BackgroundTasks
 from pydantic import BaseModel
 import torch
 import numpy as np
@@ -16,7 +16,9 @@ model_path = "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers"
 # Add directory to store generated videos
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 VIDEO_DIR = os.path.join(BASE_DIR, "generated_videos")
+STATUS_DIR = os.path.join(BASE_DIR, "job_status")
 os.makedirs(VIDEO_DIR, exist_ok=True)
+os.makedirs(STATUS_DIR, exist_ok=True)
 
 app = FastAPI()
 
@@ -43,23 +45,17 @@ class GenerationRequest(BaseModel):
     num_frames: int = 33
     image_url: str = "https://huggingface.co/datasets/huggingface/documentation-images/resolve/main/diffusers/astronaut.jpg"
 
-@app.post("/generate-video")
-def generate_video(request: GenerationRequest):
-    print(f"request created: {request.prompt}, {request.negative_prompt}, {request.num_frames}, {request.image_url}")
-    """Generate a video from a text prompt."""
-    image = load_image(
-        request.image_url
-    )
-
-    # See Hugging Face documentation for details: https://huggingface.co/docs/diffusers/main/en/api/pipelines/wan#image-to-video-generation
-    max_area = 480 * 832
-    aspect_ratio = image.height / image.width
-    mod_value = pipe.vae_scale_factor_spatial * pipe.transformer.config.patch_size[1]
-    height = round(np.sqrt(max_area * aspect_ratio)) // mod_value * mod_value
-    width = round(np.sqrt(max_area / aspect_ratio)) // mod_value * mod_value
-    image = image.resize((width, height))
-
+def run_video_job(job_id: str, request: GenerationRequest):
     try:
+        image = load_image(request.image_url)
+
+        max_area = 480 * 832
+        aspect_ratio = image.height / image.width
+        mod_value = pipe.vae_scale_factor_spatial * pipe.transformer.config.patch_size[1]
+        height = round(np.sqrt(max_area * aspect_ratio)) // mod_value * mod_value
+        width = round(np.sqrt(max_area / aspect_ratio)) // mod_value * mod_value
+        image = image.resize((width, height))
+
         frames = pipe(
             image=image,
             prompt=request.prompt,
@@ -67,16 +63,36 @@ def generate_video(request: GenerationRequest):
             num_frames=request.num_frames,
             guidance_scale=5.0,
         ).frames[0]
-        print("frames successfully generated")
 
-        video_filename = f"{VIDEO_DIR}/{uuid.uuid4()}.mp4"
+        video_filename = os.path.join(VIDEO_DIR, f"{job_id}.mp4")
         export_to_video(frames, video_filename, fps=16)
 
-        return {"video_path": video_filename}
+        # Mark job as complete
+        with open(os.path.join(STATUS_DIR, f"{job_id}.done"), "w") as f:
+            f.write("done")
 
     except Exception as e:
-        print(str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        with open(os.path.join(STATUS_DIR, f"{job_id}.error"), "w") as f:
+            f.write(str(e))
+
+@app.post("/generate-video")
+def generate_video(request: GenerationRequest, background_tasks: BackgroundTasks):
+    print(f"request created: {request.prompt}, {request.negative_prompt}, {request.num_frames}, {request.image_url}")
+    job_id = str(uuid.uuid4())
+
+    background_tasks.add_task(run_video_job, job_id, request)
+
+    return {"job_id": job_id, "status_url": f"/status/{job_id}", "video_url": f"/videos/{job_id}.mp4"}
+
+@app.get("/status/{job_id}")
+def get_status(job_id: str):
+    if os.path.exists(os.path.join(STATUS_DIR, f"{job_id}.done")):
+        return {"status": "completed", "video_url": f"/videos/{job_id}.mp4"}
+    elif os.path.exists(os.path.join(STATUS_DIR, f"{job_id}.error")):
+        with open(os.path.join(STATUS_DIR, f"{job_id}.error"), "r") as f:
+            return {"status": "error", "detail": f.read()}
+    else:
+        return {"status": "processing"}
 
 @app.get("/")
 def root():
