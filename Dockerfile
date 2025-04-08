@@ -17,6 +17,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # This is only working from a separate install right now
 RUN pip install git+https://github.com/huggingface/diffusers
 
+# Set Hugging Face transfer acceleration
+ENV HF_HUB_ENABLE_HF_TRANSFER=1
+
 # Create model directory
 RUN mkdir -p /app/model
 

@@ -1,16 +1,15 @@
-from fastapi import FastAPI, BackgroundTasks
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import torch
+import os
+import uuid
+
 import numpy as np
+import torch
 from diffusers import AutoencoderKLWan, WanImageToVideoPipeline
 from diffusers.utils import export_to_video, load_image
-from transformers import CLIPVisionModel
-import uuid
-import os
-from PIL import Image
+from fastapi import BackgroundTasks, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import os
+from pydantic import BaseModel
+from transformers import CLIPVisionModel
 
 model_path = "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers"
 
@@ -24,7 +23,7 @@ os.makedirs(STATUS_DIR, exist_ok=True)
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Or restrict to ["http://localhost:5173"] for tighter security
+    allow_origins=["*"],  # Or restrict to your client app URL for tighter security
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
